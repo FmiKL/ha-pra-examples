@@ -4,7 +4,7 @@ Infrastructure de **haute disponibilité saisonnière** et de **reprise d'activi
 
 OVHcloud assure l'hébergement permanent. Pendant la période critique, une infrastructure redondante est activée chez Scaleway. Les sauvegardes restent indépendantes de cette infrastructure saisonnière.
 
-## Architecture
+## Architecture cible
 
 ```mermaid
 flowchart TB
@@ -41,3 +41,22 @@ La redondance Scaleway couvre certaines pannes isolées. Les bascules entre héb
 - [Orchestration](docs/orchestration.md)
 - [Sauvegardes](docs/sauvegardes.md)
 - [Plan de reprise d'activité](docs/pra/README.md)
+
+## Simulation locale
+
+L'environnement local utilise PHP 8.4 et MySQL 8.4. Le compteur sert à vérifier les écritures et les données après restauration ou bascule.
+
+```sh
+docker compose up --build --wait
+docker compose exec app php tests/smoke.php
+```
+
+Le test vérifie la page, la santé et une écriture en base. Il ajoute une unité au compteur.
+
+L'application est accessible sur [localhost:8080](http://localhost:8080). La route [/health](http://localhost:8080/health) renvoie `200` si le compteur est lisible en base, `503` sinon. Les identifiants de Compose servent uniquement à la simulation locale.
+
+```sh
+docker compose down
+```
+
+Les données restent dans le volume Docker après l'arrêt.
