@@ -1,0 +1,6 @@
+CREATE TABLE counter (
+    id TINYINT PRIMARY KEY,
+    value BIGINT UNSIGNED NOT NULL DEFAULT 0
+);
+
+INSERT INTO counter (id, value) VALUES (1, 0);
