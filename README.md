@@ -59,4 +59,4 @@ L'application est accessible sur [localhost:8080](http://localhost:8080). La rou
 docker compose down
 ```
 
-Les données restent dans le volume Docker après l'arrêt.
+Pour sauvegarder et restaurer la base, voir les [commandes locales](docs/sauvegardes.md#exécution-locale).

@@ -14,3 +14,22 @@ Les sauvegardes sont planifiées chez les fournisseurs. Sur le mutualisé OVHclo
 La fréquence, la durée de conservation et les objectifs de reprise (RPO et RTO) sont à définir avant la mise en production. Le planificateur natif de l'hébergement web OVHcloud permet au maximum une exécution par heure. Une fréquence supérieure nécessite un autre mécanisme de déclenchement. Voir les [limitations des tâches CRON OVHcloud](https://docs.ovhcloud.com/fr/guides/web-cloud/web-hosting/cron-tasks).
 
 Les sauvegardes natives de MySQL managé complètent les copies externes sans les remplacer.
+
+## Exécution locale
+
+Les commandes s'exécutent depuis la racine du projet, avec les services Compose démarrés. Les fichiers SQL sont produits avec [`mysqldump`](https://dev.mysql.com/doc/refman/8.4/en/mysqldump.html) et conservés dans `backups/`, hors du volume MySQL. Ce dossier est exclu de Git et du contexte de construction Docker.
+
+```sh
+mkdir -p backups
+./scripts/backup.sh > backups/app.sql.tmp && mv backups/app.sql.tmp backups/app.sql
+```
+
+L'export passe par un fichier temporaire, pour ne pas écraser la sauvegarde précédente s'il échoue.
+
+La restauration remplace les données courantes par celles de l'export. Arrêter l'application pendant l'importation.
+
+```sh
+docker compose stop app &&
+./scripts/restore.sh < backups/app.sql &&
+docker compose up --wait app
+```
