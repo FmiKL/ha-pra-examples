@@ -2,7 +2,7 @@
 
 Les opérations reposent sur des scripts versionnés, lancés manuellement en ligne de commande.
 
-Le projet prévoit une simulation locale sous Docker Compose et un environnement réel chez les fournisseurs. Les scénarios applicatifs et les migrations peuvent être testés localement. Le comportement des services managés doit être validé chez les fournisseurs.
+La simulation locale utilise Docker Compose et Terraform avec le fournisseur Docker. Les scénarios applicatifs et les migrations peuvent être testés localement. Le comportement des services managés doit être validé chez les fournisseurs.
 
 ## Opérations
 

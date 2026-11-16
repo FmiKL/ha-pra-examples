@@ -2,3 +2,4 @@
 .env
 backups
 .DS_Store
+terraform

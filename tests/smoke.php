@@ -1,6 +1,6 @@
 <?php
 
-function request(string $method, string $path): array
+function request(string $method, string $url): array
 {
     $context = stream_context_create([
         'http' => [
@@ -11,7 +11,7 @@ function request(string $method, string $path): array
         ],
     ]);
 
-    $body = file_get_contents('http://127.0.0.1' . $path, false, $context);
+    $body = file_get_contents($url, false, $context);
     $headers = http_get_last_response_headers();
     if ($body === false || !preg_match('/\s(\d{3})\s/', $headers[0] ?? '', $matches)) {
         throw new RuntimeException("L'application doit être démarrée.");
@@ -29,15 +29,17 @@ function check(bool $success, string $message): void
     echo 'OK : ' . $message . PHP_EOL;
 }
 
-[$status] = request('GET', '/');
+$baseUrl = $argv[1] ?? 'http://app';
+
+[$status] = request('GET', $baseUrl . '/');
 check($status === 200, 'page accessible');
 
-[$status, $body] = request('GET', '/health');
+[$status, $body] = request('GET', $baseUrl . '/health');
 $before = json_decode($body, true, flags: JSON_THROW_ON_ERROR);
 check($status === 200 && $before['status'] === 'ok', 'PHP et MySQL répondent');
 
-[$writeStatus] = request('POST', '/');
-[$status, $body] = request('GET', '/health');
+[$writeStatus] = request('POST', $baseUrl . '/');
+[$status, $body] = request('GET', $baseUrl . '/health');
 $after = json_decode($body, true, flags: JSON_THROW_ON_ERROR);
 check(
     $writeStatus === 303 && $status === 200 && $after['counter'] === $before['counter'] + 1,

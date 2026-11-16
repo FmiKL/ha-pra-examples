@@ -26,10 +26,12 @@ mkdir -p backups
 
 L'export passe par un fichier temporaire, pour ne pas écraser la sauvegarde précédente s'il échoue.
 
+Sans argument, les scripts utilisent OVHcloud. Ajouter `scaleway` pour sauvegarder ou restaurer sa base.
+
 La restauration remplace les données courantes par celles de l'export. Arrêter l'application pendant l'importation.
 
 ```sh
 docker compose stop app &&
 ./scripts/restore.sh < backups/app.sql &&
-docker compose up --wait app
+docker compose start --wait
 ```
