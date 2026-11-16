@@ -45,14 +45,15 @@ La redondance Scaleway couvre certaines pannes isolées. Les bascules entre héb
 
 ## Simulation locale
 
-PHP 8.4 et MySQL 8.4 représentent l'hébergement OVHcloud. Terraform ajoute les deux instances PHP, HAProxy 3.2 et la base distincte de Scaleway. Le compteur sert à vérifier les écritures et les données après restauration ou bascule.
+Compose représente l'hébergement OVHcloud avec PHP 8.4 et MySQL 8.4. Terraform provisionne les deux instances PHP, HAProxy 3.2 et la base distincte de Scaleway. Un proxy commun simule le routage Cloudflare.
 
 ```sh
 docker compose up --build --wait
+./scripts/maintenance.sh off ovh
 docker compose run --rm --no-deps app php tests/smoke.php
 ```
 
-Le test vérifie la page, la santé et une écriture en base. Il ajoute une unité au compteur.
+Toute nouvelle instance démarre en maintenance. La deuxième commande ouvre OVHcloud aux écritures. Le test passe par l'entrée publique et vérifie la page, la santé et une écriture en base, qui incrémente le compteur.
 
 L'application est accessible sur [localhost:8080](http://localhost:8080). La route [/health](http://localhost:8080/health) renvoie `200` si le compteur est lisible en base, `503` sinon. Les identifiants de Compose et de Terraform servent uniquement à la simulation locale.
 
@@ -60,4 +61,4 @@ L'application est accessible sur [localhost:8080](http://localhost:8080). La rou
 docker compose down
 ```
 
-Voir les [sauvegardes locales](docs/sauvegardes.md#exécution-locale) et les [scénarios Scaleway](docs/simulation.md).
+Voir les [sauvegardes locales](docs/sauvegardes.md#exécution-locale) et les [scénarios de bascule et de panne](docs/simulation.md).

@@ -10,5 +10,5 @@ variable "app_image" {
 
 variable "lb_port" {
   type    = number
-  default = 8081
+  default = 8082
 }

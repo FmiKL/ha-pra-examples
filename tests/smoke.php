@@ -29,19 +29,27 @@ function check(bool $success, string $message): void
     echo 'OK : ' . $message . PHP_EOL;
 }
 
-$baseUrl = $argv[1] ?? 'http://app';
+$baseUrl = $argv[1] ?? 'http://cloudflare';
+$maintenance = ($argv[2] ?? '') === '--maintenance';
 
 [$status] = request('GET', $baseUrl . '/');
-check($status === 200, 'page accessible');
+check(
+    $status === ($maintenance ? 503 : 200),
+    $maintenance ? 'page en maintenance' : 'page accessible',
+);
 
 [$status, $body] = request('GET', $baseUrl . '/health');
 $before = json_decode($body, true, flags: JSON_THROW_ON_ERROR);
-check($status === 200 && $before['status'] === 'ok', 'PHP et MySQL répondent');
+check(
+    $status === 200 && $before['status'] === 'ok' && $before['maintenance'] === $maintenance,
+    'PHP et MySQL répondent dans le mode attendu',
+);
 
 [$writeStatus] = request('POST', $baseUrl . '/');
 [$status, $body] = request('GET', $baseUrl . '/health');
 $after = json_decode($body, true, flags: JSON_THROW_ON_ERROR);
 check(
-    $writeStatus === 303 && $status === 200 && $after['counter'] === $before['counter'] + 1,
-    'écriture puis relecture dans MySQL',
+    $writeStatus === ($maintenance ? 503 : 303) && $status === 200
+    && $after['counter'] === $before['counter'] + ($maintenance ? 0 : 1),
+    $maintenance ? 'écriture bloquée' : 'écriture puis relecture dans MySQL',
 );

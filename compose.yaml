@@ -1,12 +1,25 @@
 name: seasonal-ha-pra
 
 services:
+  cloudflare:
+    build: ./docker/cloudflare
+    ports:
+      - "127.0.0.1:${APP_PORT:-8080}:80"
+    volumes:
+      - cloudflare-routing:/usr/local/etc/haproxy/routing
+    networks: [public]
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://127.0.0.1/health"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   app:
     # Image réutilisée par les instances Scaleway créées par Terraform.
     image: ${APP_IMAGE:-seasonal-ha-pra-app:local}
     build: .
     ports:
-      - "127.0.0.1:${APP_PORT:-8080}:80"
+      - "127.0.0.1:${OVH_PORT:-8081}:80"
     environment:
       APP_ENV: ovh
       DB_HOST: db
@@ -49,4 +62,5 @@ networks:
     name: ${COMPOSE_PROJECT_NAME:-seasonal-ha-pra}-public
 
 volumes:
+  cloudflare-routing:
   mysql-data:
