@@ -5,5 +5,6 @@ RUN docker-php-ext-install pdo_mysql
 WORKDIR /var/www/html
 
 COPY docker/apache.conf /etc/apache2/sites-available/000-default.conf
+# public/.maintenance fait démarrer toute nouvelle instance en maintenance.
 COPY public/ public/
 COPY tests/ tests/

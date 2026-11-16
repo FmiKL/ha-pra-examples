@@ -20,3 +20,20 @@ select_environment() {
             ;;
     esac
 }
+
+wait_healthy() {
+    remaining=60
+
+    while [ "$remaining" -gt 0 ]; do
+        status="$(docker inspect --format '{{.State.Health.Status}}' "$1")"
+        if [ "$status" = healthy ]; then
+            return 0
+        fi
+
+        sleep 1
+        remaining=$((remaining - 1))
+    done
+
+    printf 'Conteneur non prêt : %s\n' "$1" >&2
+    return 1
+}

@@ -16,6 +16,14 @@ if ($method !== 'GET' && !($path === '/' && $method === 'POST')) {
     exit;
 }
 
+$maintenance = file_exists(__DIR__ . '/.maintenance');
+if ($maintenance && $path !== '/health') {
+    http_response_code(503);
+    header('Content-Type: text/plain; charset=utf-8');
+    echo 'Maintenance en cours.';
+    exit;
+}
+
 try {
     $environment = getenv('APP_ENV');
     if ($environment === false || $environment === '') {
@@ -63,6 +71,7 @@ if ($path === '/health') {
     echo json_encode([
         'status' => 'ok',
         'environment' => $environment,
+        'maintenance' => $maintenance,
         'counter' => (int) $value,
     ]);
     exit;
