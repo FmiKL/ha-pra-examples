@@ -1,7 +1,12 @@
 #!/bin/sh
 
+set -eu
+
+. ./scripts/common.sh
+select_environment "${1:-ovh}"
+
 # Export cohérent avec les droits du compte applicatif.
-docker compose exec -T db sh -c '
+docker exec "$db_container" sh -c '
     MYSQL_PWD="$MYSQL_PASSWORD" exec mysqldump \
         --single-transaction \
         --no-tablespaces \
