@@ -22,7 +22,7 @@ Le marqueur est inclus dans l'image, donc toute nouvelle instance démarre en ma
 
 ## Préparer Scaleway
 
-Depuis la racine du projet, avec OVHcloud et le proxy démarrés. La première commande transmet le contexte Docker courant au fournisseur Terraform.
+Depuis le dossier de l'exemple, avec OVHcloud et le proxy démarrés. La première commande transmet le contexte Docker courant au fournisseur Terraform.
 
 ```sh
 export DOCKER_CONTEXT="$(docker context show)"

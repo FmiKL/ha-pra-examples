@@ -21,7 +21,7 @@ fi
 for container in $app_containers; do
     if [ "$1" = on ]; then
         # Poser le marqueur même sur une instance arrêtée.
-        docker cp public/.maintenance "$container:/var/www/html/public/.maintenance"
+        docker cp .maintenance "$container:/var/www/html/public/.maintenance"
     else
         docker exec "$container" rm -f /var/www/html/public/.maintenance
     fi

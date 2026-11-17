@@ -1,7 +1,7 @@
-/.env
-/backups/
+.env
 .DS_Store
-/terraform/**/.terraform/
-/terraform/**/*.tfstate*
-/terraform/**/*.tfplan
-/terraform/**/*.tfvars
+backups/
+.terraform/
+*.tfstate*
+*.tfplan
+*.tfvars
