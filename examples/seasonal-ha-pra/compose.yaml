@@ -17,7 +17,10 @@ services:
   app:
     # Image réutilisée par les instances Scaleway créées par Terraform.
     image: ${APP_IMAGE:-seasonal-ha-pra-app:local}
-    build: .
+    build:
+      context: ../../app
+      args:
+        MAINTENANCE: "true"
     ports:
       - "127.0.0.1:${OVH_PORT:-8081}:80"
     environment:
@@ -48,7 +51,7 @@ services:
       MYSQL_ROOT_PASSWORD: local-root-password
     volumes:
       - mysql-data:/var/lib/mysql
-      - ./docker/mysql/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ../../app/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "MYSQL_PWD=\"$${MYSQL_PASSWORD}\" mysql --protocol=TCP -h 127.0.0.1 -u \"$${MYSQL_USER}\" \"$${MYSQL_DATABASE}\" -e 'SELECT 1'"]
       interval: 3s

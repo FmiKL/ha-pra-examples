@@ -48,8 +48,8 @@ resource "docker_container" "db" {
   }
 
   volumes {
-    host_path      = abspath("${path.module}/../../docker/mysql/init.sql")
-    container_path = "/docker-entrypoint-initdb.d/init.sql"
+    host_path      = abspath("${path.module}/../../../../app/schema.sql")
+    container_path = "/docker-entrypoint-initdb.d/schema.sql"
     read_only      = true
   }
 

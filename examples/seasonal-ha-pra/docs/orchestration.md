@@ -4,7 +4,7 @@
 
 ## Rundeck local
 
-Avec la [simulation démarrée](../README.md#simulation-locale), lancer Rundeck depuis la racine du projet.
+Avec la [simulation démarrée](../README.md#simulation-locale), lancer Rundeck depuis le dossier de l'exemple.
 
 ```sh
 docker compose -f rundeck/compose.yaml up --build --wait

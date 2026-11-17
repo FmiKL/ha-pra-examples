@@ -17,7 +17,7 @@ Les sauvegardes natives de MySQL managé complètent les copies externes sans le
 
 ## Exécution locale
 
-Les commandes s'exécutent depuis la racine du projet, avec les services Compose démarrés. Les fichiers SQL sont produits avec [`mysqldump`](https://dev.mysql.com/doc/refman/8.4/en/mysqldump.html) et conservés dans `backups/`, hors du volume MySQL. Ce dossier est exclu de Git et du contexte de construction Docker.
+Les commandes s'exécutent depuis le dossier de l'exemple, avec les services Compose démarrés. Les fichiers SQL sont produits avec [`mysqldump`](https://dev.mysql.com/doc/refman/8.4/en/mysqldump.html) et conservés dans `backups/`, hors du volume MySQL. Ce dossier est exclu de Git.
 
 ```sh
 mkdir -p backups

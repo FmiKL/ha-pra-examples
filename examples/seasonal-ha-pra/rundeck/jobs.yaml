@@ -26,7 +26,7 @@
       enforced: true
       values: [ovh, scaleway]
     - name: sauvegarde
-      description: Chemin du fichier SQL depuis la racine du projet. Vide pour un transfert depuis la source.
+      description: Chemin du fichier SQL depuis le dossier de l'exemple. Vide pour un transfert depuis la source.
   sequence:
     keepgoing: false
     strategy: node-first
