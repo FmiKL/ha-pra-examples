@@ -1,0 +1,30 @@
+name: seasonal-ha-pra-rundeck
+
+services:
+  rundeck:
+    # Image Rundeck publiée uniquement pour amd64.
+    platform: linux/amd64
+    build: .
+    ports:
+      - "127.0.0.1:${RUNDECK_PORT:-4440}:4440"
+    environment:
+      RUNDECK_GRAILS_URL: http://localhost:${RUNDECK_PORT:-4440}
+      # Une seule exécution de job à la fois.
+      RUNDECK_QUARTZ_THREADPOOL_THREADCOUNT: 1
+      PROJECT_DIR: ${PWD}
+    volumes:
+      # Les montages créés par Docker et Terraform utilisent les chemins du poste.
+      - ${PWD}:${PWD}
+      - /var/run/docker.sock:/var/run/docker.sock
+      - data:/home/rundeck/server/data
+      - logs:/home/rundeck/var/logs
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://localhost:4440/user/login"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+
+volumes:
+  data:
+  logs:

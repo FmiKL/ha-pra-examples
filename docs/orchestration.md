@@ -1,10 +1,26 @@
-# Orchestration cible
+# Orchestration
 
 **Rundeck fonctionne localement sous Docker Compose** et lance des scripts versionnés. Ils restent exécutables en ligne de commande, sans Rundeck ni serveur de pilotage permanent.
 
-La simulation locale utilise Docker Compose et Terraform avec le fournisseur Docker. Les scénarios applicatifs et les migrations peuvent être testés localement. Le comportement des services managés doit être validé chez les fournisseurs.
+## Rundeck local
 
-## Opérations
+Avec la [simulation démarrée](../README.md#simulation-locale), lancer Rundeck depuis la racine du projet.
+
+```sh
+docker compose -f rundeck/compose.yaml up --build --wait
+```
+
+Ouvrir [localhost:4440](http://localhost:4440), se connecter avec `admin` / `admin`, créer le projet `seasonal-ha-pra` et importer [rundeck/jobs.yaml](../rundeck/jobs.yaml) depuis la page des jobs.
+
+Pour une bascule, renseigner la source et la destination. Ajouter le chemin d'une sauvegarde SQL pour une reprise depuis un export.
+
+Les jobs sont lancés manuellement et exécutés un par un. Les définitions sont versionnées, les données et journaux Rundeck persistent dans des volumes Docker. Le conteneur accède au projet et au moteur Docker du poste. Cette configuration et ses identifiants sont réservés à la simulation locale.
+
+```sh
+docker compose -f rundeck/compose.yaml down
+```
+
+## Opérations cibles
 
 | Action               | Résultat                                                          |
 | -------------------- | ----------------------------------------------------------------- |
@@ -14,7 +30,7 @@ La simulation locale utilise Docker Compose et Terraform avec le fournisseur Doc
 | PRA entre hébergeurs | Reprise depuis la source accessible ou une sauvegarde exploitable |
 | Supprimer Scaleway   | `terraform destroy` après validation du retour sur OVHcloud       |
 
-## Bascule
+### Bascule
 
 ```mermaid
 flowchart TD
@@ -46,7 +62,7 @@ flowchart TD
 - **PRA** : si la source est inaccessible, restaurer la dernière sauvegarde exploitable. Une perte de données récentes reste possible.
 - **Sécurité des données** : une seule opération de bascule à la fois et une seule base autorisée à écrire. Un mécanisme prévu avant la panne doit garantir que l'ancienne origine n'écrit plus, même après redémarrage. Après la bascule, tout retour exige un nouveau transfert ou une réconciliation.
 
-Le script modifie l'enregistrement `A` proxifié via l'API DNS Cloudflare, avec un jeton limité aux droits nécessaires (`DNS Write`). Il vérifie la réponse de l'API et l'accès public, puis consigne le résultat.
+En production, le script modifie l'enregistrement `A` proxifié via l'API DNS Cloudflare, avec un jeton limité aux droits nécessaires (`DNS Write`). Il vérifie la réponse de l'API et l'accès public, puis consigne le résultat.
 
 La base MySQL incluse dans un hébergement mutualisé OVHcloud n'accepte pas les connexions directes depuis un serveur externe. Ses exports et restaurations doivent donc passer par un mécanisme autorisé côté hébergement. Voir les [spécificités techniques OVHcloud](https://docs.ovhcloud.com/fr/guides/web-cloud/web-hosting/hosting-technical-specificities).
 

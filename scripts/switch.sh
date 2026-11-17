@@ -31,8 +31,7 @@ if [ "$active_origin" != "active $source_environment" ]; then
 fi
 
 if [ "$#" -eq 2 ]; then
-    source_url="http://$(docker port "$origin_container" 80/tcp)"
-    curl --fail --silent --show-error --max-time 10 --output /dev/null "$source_url/health"
+    docker compose exec -T cloudflare wget -q -T 10 -O - "http://$source_environment/health" > /dev/null
 fi
 
 ./scripts/maintenance.sh on "$destination_environment"
@@ -73,9 +72,7 @@ if [ "$destination_environment" = scaleway ]; then
     wait_healthy "$origin_container"
 fi
 
-destination_url="http://$(docker port "$origin_container" 80/tcp)"
-curl --fail --silent --show-error --retry 5 --retry-delay 1 --max-time 10 \
-    "$destination_url/health"
+docker compose exec -T cloudflare wget -q -T 10 -O - "http://$destination_environment/health"
 printf '\n'
 
 # Conserver l'origine active dans le volume du proxy.
@@ -83,10 +80,9 @@ docker compose exec -T --user root cloudflare sh -c \
     'printf "active %s\n" "$1" > /usr/local/etc/haproxy/routing/origin.map' sh "$destination_environment"
 docker compose restart cloudflare
 docker compose start --wait cloudflare
-public_url="http://$(docker compose port cloudflare 80)"
-curl --fail --silent --show-error --max-time 10 "$public_url/health"
+docker compose exec -T cloudflare wget -q -T 10 -O - http://127.0.0.1/health
 printf '\n'
 
 ./scripts/maintenance.sh off "$destination_environment"
-curl --fail --silent --show-error --max-time 10 --output /dev/null "$public_url/"
+docker compose exec -T cloudflare wget -q -T 10 -O /dev/null http://127.0.0.1/
 printf 'Origine active : %s\n' "$destination_environment"

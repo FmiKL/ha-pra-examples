@@ -1,0 +1,82 @@
+- name: Préparer Scaleway
+  description: Créer les ressources saisonnières en maintenance.
+  loglevel: INFO
+  sequence:
+    keepgoing: false
+    strategy: node-first
+    commands:
+      - script: |
+          #!/bin/sh
+          set -eu
+          cd "$PROJECT_DIR"
+          terraform -chdir=terraform/local init -input=false
+          terraform -chdir=terraform/local apply -input=false -auto-approve
+          docker compose run --rm --no-deps app php tests/smoke.php http://scaleway --maintenance
+
+- name: Basculer
+  description: Migrer vers l'autre environnement, avec une sauvegarde SQL en cas de PRA.
+  loglevel: INFO
+  options:
+    - name: source
+      required: true
+      enforced: true
+      values: [ovh, scaleway]
+    - name: destination
+      required: true
+      enforced: true
+      values: [ovh, scaleway]
+    - name: sauvegarde
+      description: Chemin du fichier SQL depuis la racine du projet. Vide pour un transfert depuis la source.
+  sequence:
+    keepgoing: false
+    strategy: node-first
+    commands:
+      - script: |
+          #!/bin/sh
+          set -eu
+          cd "$PROJECT_DIR"
+          if [ -n "${RD_OPTION_SAUVEGARDE:-}" ]; then
+              ./scripts/switch.sh "$RD_OPTION_SOURCE" "$RD_OPTION_DESTINATION" "$RD_OPTION_SAUVEGARDE"
+          else
+              ./scripts/switch.sh "$RD_OPTION_SOURCE" "$RD_OPTION_DESTINATION"
+          fi
+
+- name: Sauvegarder
+  description: Exporter la base dans le dossier backups.
+  loglevel: INFO
+  options:
+    - name: environnement
+      required: true
+      enforced: true
+      values: [ovh, scaleway]
+  sequence:
+    keepgoing: false
+    strategy: node-first
+    commands:
+      - script: |
+          #!/bin/sh
+          set -eu
+          cd "$PROJECT_DIR"
+          mkdir -p backups
+          file="backups/$RD_OPTION_ENVIRONNEMENT-$(date +%Y%m%d-%H%M%S).sql"
+          ./scripts/backup.sh "$RD_OPTION_ENVIRONNEMENT" > "$file"
+          printf 'Sauvegarde : %s\n' "$file"
+
+- name: Supprimer Scaleway
+  description: Détruire les ressources saisonnières après le retour sur OVHcloud.
+  loglevel: INFO
+  sequence:
+    keepgoing: false
+    strategy: node-first
+    commands:
+      - script: |
+          #!/bin/sh
+          set -eu
+          cd "$PROJECT_DIR"
+          active_origin="$(docker compose exec -T cloudflare cat /usr/local/etc/haproxy/routing/origin.map)"
+          if [ "$active_origin" != 'active ovh' ]; then
+              printf 'Revenir sur OVHcloud avant de supprimer Scaleway.\n' >&2
+              exit 1
+          fi
+          docker compose exec -T cloudflare wget -q -T 10 -O /dev/null http://127.0.0.1/
+          terraform -chdir=terraform/local destroy -input=false -auto-approve

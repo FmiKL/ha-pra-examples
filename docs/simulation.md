@@ -6,7 +6,7 @@
 | OVHcloud      | PHP/Apache et MySQL sous Compose                          | [localhost:8081](http://localhost:8081) |
 | Scaleway      | Deux instances PHP, load balancer et MySQL sous Terraform | [localhost:8082](http://localhost:8082) |
 
-Les deux environnements utilisent la même image applicative et tournent sur le même poste, avec une seule instance MySQL chacun. La délégation DNS, DNSSEC, HTTPS, MySQL HA et les protections Cloudflare restent à valider chez les fournisseurs.
+Les deux environnements utilisent la même image applicative et tournent sur le même poste, avec une seule instance MySQL chacun. La délégation DNS, DNSSEC, HTTPS, MySQL HA et les protections Cloudflare ne sont pas simulés.
 
 ## Maintenance
 
