@@ -32,8 +32,9 @@ try {
 
     $db = new PDO(
         sprintf(
-            'mysql:host=%s;dbname=%s;charset=utf8mb4',
+            'mysql:host=%s;port=%s;dbname=%s;charset=utf8mb4',
             getenv('DB_HOST'),
+            getenv('DB_PORT') ?: 3306,
             getenv('DB_NAME'),
         ),
         getenv('DB_USER'),

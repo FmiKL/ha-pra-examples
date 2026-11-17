@@ -2,10 +2,11 @@
 
 Exemples d'architectures de haute disponibilité et de reprise d'activité, testables en local avec Docker.
 
-| Exemple                                                                      | Architecture                                                               |
-| ---------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
-| [Haute disponibilité saisonnière et PRA](examples/seasonal-ha-pra/README.md) | OVHcloud permanent, renfort saisonnier chez Scaleway et PRA entre les deux |
-| [Actif/secours (InnoDB ReplicaSet)](examples/active-standby/README.md)       | Deux VPS, réplication asynchrone et IP flottante                           |
+| Exemple                                                                         | Architecture                                                               |
+| ------------------------------------------------------------------------------- | -------------------------------------------------------------------------- |
+| [Haute disponibilité saisonnière et PRA](examples/seasonal-ha-pra/README.md)    | OVHcloud permanent, renfort saisonnier chez Scaleway et PRA entre les deux |
+| [Actif/secours (InnoDB ReplicaSet)](examples/active-standby/README.md)          | Deux VPS, réplication asynchrone et IP flottante                           |
+| [Cluster à trois nœuds (InnoDB Cluster)](examples/three-node-cluster/README.md) | Load balancer, MySQL Router et bascule automatique du primaire             |
 
 Un seul exemple tourne à la fois, car ils utilisent les mêmes ports locaux.
 

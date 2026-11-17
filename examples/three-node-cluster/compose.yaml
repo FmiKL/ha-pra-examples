@@ -1,0 +1,132 @@
+name: three-node-cluster
+
+x-app: &app
+  build: ../../app
+  healthcheck:
+    test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1/health') === false ? 1 : 0);"]
+    interval: 5s
+    timeout: 5s
+    retries: 10
+  networks:
+    default:
+      aliases: [app]
+
+x-router: &router
+  image: container-registry.oracle.com/mysql/community-router:8.4
+  # Image MySQL Router publiée uniquement pour amd64.
+  platform: linux/amd64
+  # Réessayer tant que la base locale n'a pas rejoint le cluster.
+  restart: unless-stopped
+
+x-db: &db
+  image: mysql:8.4
+  # Redémarre MySQL après le clonage de vps1.
+  restart: unless-stopped
+  environment:
+    MYSQL_DATABASE: app
+    MYSQL_USER: app
+    MYSQL_PASSWORD: local-demo-password
+    MYSQL_ROOT_PASSWORD: local-root-password
+  healthcheck:
+    test: ["CMD-SHELL", "MYSQL_PWD=\"$${MYSQL_PASSWORD}\" mysql --protocol=TCP -h 127.0.0.1 -u \"$${MYSQL_USER}\" \"$${MYSQL_DATABASE}\" -e 'SELECT 1'"]
+    interval: 3s
+    timeout: 5s
+    retries: 30
+    start_period: 20s
+
+services:
+  lb:
+    image: haproxy:3.2-alpine
+    ports:
+      - "127.0.0.1:${APP_PORT:-8080}:80"
+    volumes:
+      - ./docker/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+
+  vps1-app:
+    <<: *app
+    ports:
+      - "127.0.0.1:${VPS1_PORT:-8081}:80"
+    environment:
+      APP_ENV: vps1
+      DB_HOST: vps1-router
+      DB_PORT: 6446
+      DB_NAME: app
+      DB_USER: app
+      DB_PASSWORD: local-demo-password
+    depends_on: [vps1-router]
+
+  vps1-router:
+    <<: *router
+    environment:
+      MYSQL_HOST: vps1-db
+      MYSQL_PORT: 3306
+      MYSQL_USER: root
+      MYSQL_PASSWORD: local-root-password
+
+  vps1-db:
+    <<: *db
+    command: --server-id=1 --report-host=vps1-db --gtid-mode=ON --enforce-gtid-consistency=ON
+    volumes:
+      - vps1-mysql:/var/lib/mysql
+      - ../../app/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+
+  vps2-app:
+    <<: *app
+    ports:
+      - "127.0.0.1:${VPS2_PORT:-8082}:80"
+    environment:
+      APP_ENV: vps2
+      DB_HOST: vps2-router
+      DB_PORT: 6446
+      DB_NAME: app
+      DB_USER: app
+      DB_PASSWORD: local-demo-password
+    depends_on: [vps2-router]
+
+  vps2-router:
+    <<: *router
+    environment:
+      MYSQL_HOST: vps2-db
+      MYSQL_PORT: 3306
+      MYSQL_USER: root
+      MYSQL_PASSWORD: local-root-password
+
+  vps2-db:
+    <<: *db
+    command: --server-id=2 --report-host=vps2-db --gtid-mode=ON --enforce-gtid-consistency=ON
+    volumes:
+      - vps2-mysql:/var/lib/mysql
+      - ../../app/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+
+  vps3-app:
+    <<: *app
+    ports:
+      - "127.0.0.1:${VPS3_PORT:-8083}:80"
+    environment:
+      APP_ENV: vps3
+      DB_HOST: vps3-router
+      DB_PORT: 6446
+      DB_NAME: app
+      DB_USER: app
+      DB_PASSWORD: local-demo-password
+    depends_on: [vps3-router]
+
+  vps3-router:
+    <<: *router
+    environment:
+      MYSQL_HOST: vps3-db
+      MYSQL_PORT: 3306
+      MYSQL_USER: root
+      MYSQL_PASSWORD: local-root-password
+
+  vps3-db:
+    <<: *db
+    command: --server-id=3 --report-host=vps3-db --gtid-mode=ON --enforce-gtid-consistency=ON
+    volumes:
+      - vps3-mysql:/var/lib/mysql
+      - ../../app/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+
+volumes:
+  vps1-mysql:
+  vps2-mysql:
+  vps3-mysql:
