@@ -28,13 +28,14 @@ if [ "$target" = vps2 ]; then
     other=vps1
 fi
 
+# Rebrancher chaque conteneur avec son nom de service, perdu au débranchement.
 other_app="$(docker compose ps -aq "$other-app")"
 docker network disconnect "$network" "$other_app"
-docker network connect "$network" "$other_app"
+docker network connect --alias "$other-app" "$network" "$other_app"
 
 target_app="$(docker compose ps -aq "$target-app")"
 docker network disconnect "$network" "$target_app"
-docker network connect --alias vip "$network" "$target_app"
+docker network connect --alias vip --alias "$target-app" "$network" "$target_app"
 
 # Attendre que la passerelle suive l'IP flottante.
 remaining=10
