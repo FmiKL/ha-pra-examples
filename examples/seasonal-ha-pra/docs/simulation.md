@@ -60,6 +60,12 @@ docker compose run --rm --no-deps app php tests/smoke.php
 terraform -chdir=terraform/local apply
 ```
 
+Si l'instance a été supprimée, Terraform la recrée en maintenance. Sa route `/health` répond pourtant, et le load balancer lui envoie une partie des visiteurs. Une fois l'instance vérifiée, désactiver son mode maintenance.
+
+```sh
+./scripts/maintenance.sh off scaleway
+```
+
 ## Reprise depuis une sauvegarde
 
 Avec OVHcloud actif, conserver un export puis simuler sa panne.
