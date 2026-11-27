@@ -1,0 +1,3 @@
+[mysqld]
+# Chiffrement entre nœuds désactivé en local, il exige des certificats communs aux nœuds.
+pxc-encrypt-cluster-traffic = OFF

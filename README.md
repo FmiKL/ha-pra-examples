@@ -7,6 +7,7 @@ Exemples d'architectures de haute disponibilité et de reprise d'activité, test
 | [Haute disponibilité saisonnière et PRA](examples/seasonal-ha-pra/README.md)    | OVHcloud permanent, renfort saisonnier chez Scaleway et PRA entre les deux |
 | [Actif/secours (InnoDB ReplicaSet)](examples/active-standby/README.md)          | Deux VPS, réplication asynchrone et IP flottante                           |
 | [Cluster à trois nœuds (InnoDB Cluster)](examples/three-node-cluster/README.md) | Load balancer, MySQL Router et bascule automatique du primaire             |
+| [Actif-actif (Percona XtraDB Cluster)](examples/active-active/README.md)        | Deux VPS qui écrivent tous les deux, avec un arbitre                       |
 
 Un seul exemple tourne à la fois, car ils utilisent les mêmes ports locaux.
 

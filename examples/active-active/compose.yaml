@@ -1,0 +1,108 @@
+name: active-active
+
+x-app: &app
+  build: ../../app
+  healthcheck:
+    test: ["CMD", "php", "-r", "exit(@file_get_contents('http://127.0.0.1/health') === false ? 1 : 0);"]
+    interval: 5s
+    timeout: 5s
+    retries: 10
+  networks:
+    default:
+      aliases: [app]
+
+x-db-env: &db-env
+  MYSQL_DATABASE: app
+  MYSQL_USER: app
+  MYSQL_PASSWORD: local-demo-password
+  MYSQL_ROOT_PASSWORD: local-root-password
+  CLUSTER_NAME: app
+  # Ne pas envoyer de télémétrie à Percona.
+  PERCONA_TELEMETRY_DISABLE: "1"
+
+x-db: &db
+  image: percona/percona-xtradb-cluster:8.4
+  # Laisser à MySQL le temps de s'arrêter proprement, sinon aucun nœud ne peut relancer le cluster.
+  stop_grace_period: 1m
+  healthcheck:
+    # Prêt quand le nœud appartient au groupe majoritaire.
+    test: ["CMD-SHELL", "MYSQL_PWD=\"$${MYSQL_ROOT_PASSWORD}\" mysql --protocol=TCP -h 127.0.0.1 -u root -N -e \"SHOW GLOBAL STATUS LIKE 'wsrep_ready'\" | grep -q ON"]
+    interval: 3s
+    timeout: 5s
+    retries: 40
+    start_period: 30s
+
+services:
+  lb:
+    image: haproxy:3.2-alpine
+    ports:
+      - "127.0.0.1:${APP_PORT:-8080}:80"
+    volumes:
+      - ./docker/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+
+  vps1-app:
+    <<: *app
+    ports:
+      - "127.0.0.1:${VPS1_PORT:-8081}:80"
+    environment:
+      APP_ENV: vps1
+      DB_HOST: vps1-db
+      DB_NAME: app
+      DB_USER: app
+      DB_PASSWORD: local-demo-password
+    depends_on:
+      vps1-db:
+        condition: service_healthy
+
+  vps1-db:
+    <<: *db
+    environment:
+      <<: *db-env
+      # Vide seulement quand setup.sh crée le cluster à partir de vps1.
+      CLUSTER_JOIN: ${VPS1_CLUSTER_JOIN-vps2-db,arbiter}
+    volumes:
+      - vps1-mysql:/var/lib/mysql
+      - ../../app/schema.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+      - ./docker/pxc.cnf:/etc/my.cnf.d/pxc.cnf:ro
+
+  vps2-app:
+    <<: *app
+    ports:
+      - "127.0.0.1:${VPS2_PORT:-8082}:80"
+    environment:
+      APP_ENV: vps2
+      DB_HOST: vps2-db
+      DB_NAME: app
+      DB_USER: app
+      DB_PASSWORD: local-demo-password
+    depends_on:
+      vps2-db:
+        condition: service_healthy
+
+  vps2-db:
+    <<: *db
+    environment:
+      <<: *db-env
+      CLUSTER_JOIN: ${VPS2_CLUSTER_JOIN-vps1-db,arbiter}
+    volumes:
+      - vps2-mysql:/var/lib/mysql
+      - ./docker/pxc.cnf:/etc/my.cnf.d/pxc.cnf:ro
+    # À l'arrêt, vps1 s'arrête en dernier et peut relancer le cluster.
+    depends_on:
+      vps1-db:
+        condition: service_healthy
+
+  arbiter:
+    build: ./docker/garbd
+    command: --group=app --address=gcomm://vps1-db,vps2-db
+    # Réessayer tant que le cluster n'existe pas.
+    restart: unless-stopped
+    depends_on:
+      vps1-db:
+        condition: service_healthy
+      vps2-db:
+        condition: service_healthy
+
+volumes:
+  vps1-mysql:
+  vps2-mysql:
